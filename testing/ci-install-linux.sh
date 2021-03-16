@@ -22,4 +22,5 @@ sudo apt-get install -y cppcheck
 #sudo apt install -y python3-pip
 sudo apt-get install python3-setuptools && sudo pip3 install git+https://github.com/gcovr/gcovr.git
 
-#TODO: include linters
+#lcov
+sudo apt-get install lcov

@@ -45,7 +45,14 @@ script:
     
 unit-testing:
     - ctest --output-on-failure
-    - gcovr -r ..
-    
+    #- gcovr -r ..
+    - lcov --directory . --capture --output-file coverage.info
+    - lcov --remove coverage.info '/usr/*' "${HOME}"'/.cache/*' --output-file coverage.info
+    - lcov --list coverage.info
+    - codecov
+
+after_success:
+    - bash <(curl -s https://codecov.io/bash)
+
 safety:
     - valgrind --error-exitcode=1 --tool=memcheck --leak-check=full ./program ../testing/logic/cases/17.txt
