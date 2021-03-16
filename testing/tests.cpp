@@ -56,9 +56,7 @@ TEST(LogicTest, Main) {
 
         sz = read(fd[0], buf, 20 * BUFFER_SIZE);
         close(fd[0]);
-        /*if (sz > 0) {
-            write(STDOUT_FILENO, buf, sz);
-        }*/
+        ASSERT_GT(sz, 0);
         waitpid(pid_fork, &status, 0);
 
         EXPECT_STREQ(buf, answer_str.c_str());
@@ -98,7 +96,7 @@ TEST(ErrorTest, BadFile) {
 
 TEST(ErrorTest, SingleQuotesSkipping) {
     const char invalid_line [] = "' here we can see an opening quote, but no closing one";
-    std::cout << "Error test | no closing single quote in a file" << std::endl;
+    std::cout << "[Error test] | no closing single quote in a file" << std::endl;
 
     size_t cnt = 1;
     char* res = skip_to_single_quote(const_cast<char *>(&invalid_line[1]), &cnt);
@@ -108,7 +106,7 @@ TEST(ErrorTest, SingleQuotesSkipping) {
 
 TEST(ErrorTest, SingleQuotesSkippingMultiline) {
     const char invalid_line [] = "\" here we can see\nan opening quote,\nbut no closing one";
-    std::cout << "Error test | no closing single quote in a multiline file" << std::endl;
+    std::cout << "[Error test] | no closing single quote in a multiline file" << std::endl;
 
     size_t cnt = 1;
     char* res = skip_to_single_quote(const_cast<char *>(&invalid_line[1]), &cnt);
@@ -118,7 +116,7 @@ TEST(ErrorTest, SingleQuotesSkippingMultiline) {
 
 TEST(ErrorTest, DoubleQuotesSkipping) {
     const char invalid_line [] = "' here we can see an opening quote, but no closing one";
-    std::cout << "Error test | no closing double quote in a file" << std::endl;
+    std::cout << "[Error test] | no closing double quote in a file" << std::endl;
 
     size_t cnt = 1;
     char* res = skip_to_single_quote(const_cast<char *>(&invalid_line[1]), &cnt);
@@ -139,7 +137,7 @@ TEST(ErrorTest, DoubleQuotesSkippingMultiline) {
 TEST(EdgeTest, SlashesAfterOpeningMultilineComment) {
     const char line [] = "/this is fucked up multiline\n/*/";
     const char answer [] = "/this is fucked up multiline\n/";
-    std::cout << "EdgeTest | /*/ comment /*/ situation" << std::endl;
+    std::cout << "[ EdgeTest ] | /*/ comment /*/ situation" << std::endl;
 
     size_t line_cnt = 1;
     size_t comments_cnt = 0;
@@ -159,22 +157,44 @@ TEST(EdgeTest, SlashesAfterOpeningMultilineComment) {
 }
 
 TEST(EdgeTest, ShieldingSingleQuotes) {
-    const char line_const [] = "this is a \\'line'";
+    const char line_const [] = "this is a \\'line'";  // this is a \'line'
+    const char answer [] = "this is a \\'line";
     char* line = (char*)malloc(strlen(line_const) + 1);
     ASSERT_NE(line, nullptr);
     strcpy(line, line_const);
     line[strlen(line_const)] = '\0';
 
-    const char answer [] = "this is a \\'line";
-    std::cout << "EdgeTest | \\' situation" << std::endl;
+    std::cout << "[ EdgeTest ] | \\' situation" << std::endl;
 
     size_t line_cnt = 1;
-    char* closing_quote = skip_to_single_quote(line, &line_cnt);
+    char* after_closing_quote = skip_to_single_quote(line, &line_cnt);
 
-    ASSERT_NE(closing_quote, nullptr);
+    ASSERT_NE(after_closing_quote, nullptr);
     EXPECT_EQ(line_cnt, 1);
     std::string res_line;
-    for (char* i = line; i < closing_quote; i++)
+    for (char* i = line; i < after_closing_quote - 1; i++)
+        res_line += *i;
+    EXPECT_STREQ(res_line.c_str(), answer);
+    free(line);
+}
+
+TEST(EdgeTest, ShieldingDoubleQuotes) {
+    const char line_const [] = "this is a \\'line\"";  // this is a \'line'
+    const char answer [] = "this is a \\'line";
+    char* line = (char*)malloc(strlen(line_const) + 1);
+    ASSERT_NE(line, nullptr);
+    strcpy(line, line_const);
+    line[strlen(line_const)] = '\0';
+
+    std::cout << "[ EdgeTest ] | \\\" situation" << std::endl;
+
+    size_t line_cnt = 1;
+    char* after_closing_quote = skip_to_double_quote(line, &line_cnt);
+
+    ASSERT_NE(after_closing_quote, nullptr);
+    EXPECT_EQ(line_cnt, 1);
+    std::string res_line;
+    for (char* i = line; i < after_closing_quote - 1; i++)
         res_line += *i;
     EXPECT_STREQ(res_line.c_str(), answer);
     free(line);

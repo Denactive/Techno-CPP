@@ -27,14 +27,14 @@ typedef struct {
     unsigned int type;
 } comment;
 
-int parse_comments(char* input);
+int parse_comments(const char* input);
 int parse_comments_from_file(const char *filename);
 int parse_comments_from_console();
 
-char* skip_to_single_quote(char *str, size_t *line_cnt);
-char* skip_to_double_quote(char *str, size_t *line_cnt);
-char* execute_line_comment(char *str, size_t *line_cnt, comment **res, size_t *comments_amount);
-char* execute_multiline_comment(char *str, size_t *line_cnt, comment **res, size_t *comments_amount);
+char* skip_to_single_quote(const char *str, size_t *line_cnt);
+char* skip_to_double_quote(const char *str, size_t *line_cnt);
+char* execute_line_comment(const char *str, size_t *line_cnt, comment **res, size_t *comments_amount);
+char* execute_multiline_comment(const char *str, size_t *line_cnt, comment **res, size_t *comments_amount);
 
 int res_exp(comment **res, size_t *comments_amount);
 int free_res(comment **res);
