@@ -1,0 +1,17 @@
+//this is a quotes exception test
+'a'
+//'a'
+'/'
+//'/'
+"this should not be printed"
+//"but this should" <-- watch quotes here
+/*
+//
+/
+/* /
+*/
+
+"wtf these quates \" are \' still \" not 'closed' ?
+"
+
+"/*hello world again*/"

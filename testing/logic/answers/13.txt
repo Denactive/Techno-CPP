@@ -1,0 +1,25 @@
+=================
+[0]: line: 16; type: single-line;
+line 16
+-----------------
+[1]: line: 18; type: multiline;
+
+19
+20
+21
+22
+23
+
+-----------------
+[2]: line: 26; type: single-line;
+26 line)))
+-----------------
+[3]: line: 29; type: single-line;
+29 line))  ((  //  //////
+-----------------
+[4]: line: 30; type: single-line;
+30 line))0 /*hi // */ "'"' '/' '\n' "/" bye(
+-----------------
+[5]: line: 32; type: single-line;
+why is this singleline? (line 32)
+=================

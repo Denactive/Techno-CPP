@@ -1,0 +1,4 @@
+=================
+[0]: line: 2; type: single-line;
+multiline comment in a single row
+=================

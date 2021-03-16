@@ -1,0 +1,28 @@
+=================
+[0]: line: 1; type: multiline;
+
+h
+e
+r
+e
+
+"is"
+
+a
+
+"really silly"
+     c
+      o
+       m
+
+
+
+       m
+      e
+    'n'
+    t
+/structure/
+-----------------
+[1]: line: 24; type: single-line;
+ this is a 24th line
+=================

@@ -1,0 +1,2 @@
+this if a hard test for "/*quotes*/" and /*multi
+line comments*/

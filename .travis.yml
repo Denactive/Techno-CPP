@@ -1,0 +1,51 @@
+#Лучший гайд: https://habr.com/ru/post/329264/
+
+dist:     focal    # используем Ubuntu 20.04 Focal Fossa
+sudo:     required  # используем Virtual Machine (а не Docker container)
+
+language: c       # на практике разницы между специфичным для C++ окружением
+                    # и, скажем, python -- никакой. Но пусть будет cpp.
+
+os:
+    # будем прогонять CI и на Linux, и на Mac OS X...
+    - linux
+    #- osx
+
+compiler:
+    # ... и с помощью GCC, и Clang
+    - gcc
+    - clang
+
+env:
+    # список переменных окружения, влияющих на матрицу сборки:
+    - BUILD_CONFIGURATION=Debug
+    - BUILD_CONFIGURATION=Release
+    #- TARGET_CPU=amd64
+    
+matrix:
+    exclude:
+        # вручную исключим ненужные элементы из матрицы сборки:
+        - os:       osx
+          compiler: gcc
+
+install:
+    # скрипт настройки среды и установки зависимостей:
+    - source testing/ci-install-$TRAVIS_OS_NAME.sh
+
+accuracy:
+    - cppcheck --error-exitcode=1 --suppress=missingIncludeSystem --enable=style,performance,portability,warning project/
+
+script:
+    # скрипт сборки и тестирования проекта:
+    - mkdir build
+    - cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_CONFIGURATION
+    # -DTARGET_CPU=$TARGET_CPU
+    - cmake --build .
+    
+unit-testing:
+    - ctest --output-on-failure
+    - gcovr -r ..
+    
+safety:
+    - valgrind --error-exitcode=1 --tool=memcheck --leak-check=full ./program ../testing/logic/cases/17.txt
