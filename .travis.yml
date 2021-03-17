@@ -14,7 +14,7 @@ os:
 compiler:
     # ... и с помощью GCC, и Clang
     - gcc
-    #- clang
+    - clang
 
 env:
     # список переменных окружения, влияющих на матрицу сборки:
@@ -40,7 +40,7 @@ script:
     # скрипт сборки и тестирования проекта:
     - mkdir build
     - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_CONFIGURATION
+    - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_CONFIGURATION -DCMAKE_CXX_FLAGS="--coverage"
     # -DTARGET_CPU=$TARGET_CPU
     - cmake --build .
     

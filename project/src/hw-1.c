@@ -4,8 +4,13 @@
 
 #include "hw-1.h"
 
+char* skip_to_single_quote(const char *str, size_t *line_cnt);
+char* skip_to_double_quote(const char *str, size_t *line_cnt);
+
 // starts from a sym after ' and returns a sym after closing '
 char* skip_to_single_quote(const char* str, size_t *line_cnt) {
+    if (!line_cnt || !str)
+        return NULL;
     while (*str != '\'') {
         if (*str == '\n')
             (*line_cnt)++;
@@ -24,6 +29,8 @@ char* skip_to_single_quote(const char* str, size_t *line_cnt) {
 
 // starts from a sym after " and returns a sym after closing "
 char* skip_to_double_quote(const char* str, size_t *line_cnt) {
+    if (!line_cnt || !str)
+        return NULL;
     while (*str != '\"') {
         if (*str == '\n')
             (*line_cnt)++;
@@ -41,6 +48,8 @@ char* skip_to_double_quote(const char* str, size_t *line_cnt) {
 }
 
 char* execute_line_comment(const char *str, size_t *line_cnt, comment **res, size_t *comments_amount) {
+    if (!line_cnt || !res || !comments_amount || !str)
+        return NULL;
     comment executed = {(char*)str, NULL, *line_cnt, single};
 
     while (*str != '\n') {
@@ -60,6 +69,8 @@ char* execute_line_comment(const char *str, size_t *line_cnt, comment **res, siz
 }
 
 char* execute_multiline_comment(const char *str, size_t *line_cnt, comment **res, size_t *comments_amount) {
+    if (!line_cnt || !res || !comments_amount || !str)
+        return NULL;
     // we are here after /* symbols.
     comment executed = {(char*)str, NULL, *line_cnt, single};
 
@@ -88,9 +99,16 @@ char* execute_multiline_comment(const char *str, size_t *line_cnt, comment **res
 }
 
 int res_exp(comment **res, size_t *comments_amount) {
+    if (!comments_amount)
+        return -1;
+
     size_t size = 0;
     if (*comments_amount == 0) {
         size = sizeof(comment);
+        if (*res) {
+            free(*res);
+            *res = NULL;
+        }
         *res = (comment*)malloc(size);
         if (*res) {
             (*comments_amount)++;
@@ -112,25 +130,32 @@ int res_exp(comment **res, size_t *comments_amount) {
 }
 
 int free_res(comment **res) {
+    if (!res)
+        return -1;
     free(*res);
     *res = NULL;
     return 0;
 }
 
 void print_res(const comment *res, size_t *comments_amount) {
+    size_t comments_amount_local = 0;
+    if (comments_amount)
+        comments_amount_local = *comments_amount;
+
     printf("=================\n");
-    if (!res)
+    if (!res || comments_amount_local == 0)
         printf("no comments found");
 
-    for (size_t i = 0; i < *comments_amount; i++) {
+    for (size_t i = 0; i < comments_amount_local; i++) {
         printf("[%zu]: ", i);
         print_comment(&res[i]);
-        if (i < *comments_amount - 1)
+        if (i < comments_amount_local - 1)
             printf("\n-----------------\n");
     }
     printf("\n=================\n");
 }
 
+// this function allocates memory!
 char *console_input() {
     char *input = (char*)malloc(BUFFER_SIZE * sizeof(char));
     if (!input)
@@ -141,11 +166,12 @@ char *console_input() {
     for (int i = 0; sym != EOF && i < BUFFER_SIZE; i++) {
         sym = getc(stdin);
         if (i == BUFFER_SIZE - 1) {
-            printf("Warning: Buffer overflow - only %d symbols were saved\n", BUFFER_SIZE - 1);
+            printf("\nWarning: Buffer overflow - only %d symbols were saved", BUFFER_SIZE - 1);
             break;
         }
         input[i] = sym;
     }
+    printf("\n");
 
     //safety
     input[BUFFER_SIZE - 1] = '\0';
@@ -153,6 +179,10 @@ char *console_input() {
 }
 
 void print_comment(const comment* c) {
+    if (!c) {
+        printf("An empty comment\n");
+        return;
+    }
     printf("line: %zu; type: ", c->line);
     if (c->type == single)
         printf("single-line;\n");
@@ -186,46 +216,49 @@ char* file_input(const char* filename, struct stat* stat_buf) {
     return (char*)content;
 }
 
-// gtest ругается на const
-int parse_comments(const char* input) {
-    const char *str = input;
+int parse_comments(const char* str, size_t *line_cnt, comment **res, size_t *comments_amount) {
+    if (!line_cnt || !res || !comments_amount || !str)
+        return -1;
 
-    size_t line_cnt = 1;
-    comment *res = NULL;
-    size_t comments_amount = 0;
+    if (*res && *comments_amount == 0) {
+        free(*res);
+        *res = NULL;
+    }
+    if (*res == NULL)
+        *comments_amount = 0;
 
     while (*str != '\0' && *str != NULL && *str != EOF) {
         switch (*str) {
             case '\"':
-                str = skip_to_double_quote(str + 1, &line_cnt);
+                str = skip_to_double_quote(str + 1, line_cnt);
                 if (!str) {
                     printf("Error | syntax error\n");
-                    return 0;
+                    return SYNTAX_ERROR;
                 }
                 break;
             case '\'':
-                str = skip_to_single_quote(str + 1, &line_cnt);
+                str = skip_to_single_quote(str + 1, line_cnt);
                 if (!str) {
                     printf("Error | syntax error\n");
-                    return 0;
+                    return SYNTAX_ERROR;
                 }
                 break;
             case '\n':
-                line_cnt++;
+                (*line_cnt)++;
                 str++;
                 break;
             case '/':
                 if (*(str + 1) == '/') {
-                    str = execute_line_comment(str + 2, &line_cnt, &res, &comments_amount);
+                    str = execute_line_comment(str + 2, line_cnt, res, comments_amount);
                     if (!str) {
-                        free_res(&res);
+                        free_res(res);
                         return -1;
                     }
                 }
                 if (*(str + 1) == '*') {
-                    str = execute_multiline_comment(str + 2, &line_cnt, &res, &comments_amount);
+                    str = execute_multiline_comment(str + 2, line_cnt, res, comments_amount);
                     if (!str) {
-                        free_res(&res);
+                        free_res(res);
                         return -1;
                     }
                 }
@@ -235,38 +268,5 @@ int parse_comments(const char* input) {
                 break;
         }
     }
-    print_res(res, &comments_amount);
-    free_res(&res);
-    return 0;
-}
-
-int parse_comments_from_file(const char *filename) {
-    struct stat stat_buf = {};
-    char* input = file_input(filename, &stat_buf);
-    if (!input) {
-        printf("Error | Empty input\n");
-        return -1;
-    }
-
-    if(parse_comments(input))
-        return -1;
-
-    // file mapping closing
-    if (munmap((void*)input, stat_buf.st_size))
-        printf("Error | failed to unmap %s\n", filename);
-    return 0;
-}
-
-int parse_comments_from_console() {
-    char* input = console_input();
-    if (!input) {
-        printf("Error | Empty input\n");
-        return -1;
-    }
-
-    if(parse_comments(input))
-        return -1;
-
-    free(input);
     return 0;
 }
