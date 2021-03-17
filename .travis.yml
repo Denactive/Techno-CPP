@@ -49,10 +49,18 @@ unit-testing:
     - lcov --directory . --capture --output-file coverage.info
     - lcov --remove coverage.info '/usr/*' "${HOME}"'/.cache/*' --output-file coverage.info
     - lcov --list coverage.info
-    - codecov
+    #- codecov
+    - curl -s https://codecov.io/bash > .codecov
+    - chmod +x .codecov
+    - ./.codecov
 
 after_success:
+    # public:
     - bash <(curl -s https://codecov.io/bash)
+    
+
+    #private
+    #- bash <(curl -s https://codecov.io/bash) -t your-repository-upload-token
 
 safety:
     - valgrind --error-exitcode=1 --tool=memcheck --leak-check=full ./program ../testing/logic/cases/17.txt

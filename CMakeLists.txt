@@ -5,6 +5,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_FLAGS "-g -O0 -Wall -fprofile-arcs -ftest-coverage -fPIC")
 set(CMAKE_CXX_FLAGS "-g -O0 -Wall -fprofile-arcs -ftest-coverage -fPIC")
 set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
+set(DCMAKE_CXX_FLAGS "--coverage")
 
 include_directories(project/include/)
 add_executable(program project/src/program.c project/src/hw-1.c)
