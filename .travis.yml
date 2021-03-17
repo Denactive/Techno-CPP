@@ -13,7 +13,7 @@ os:
 
 compiler:
     # ... и с помощью GCC, и Clang
-    - gcc
+    #- gcc
     - clang
 
 env:
