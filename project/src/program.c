@@ -33,5 +33,7 @@ int main(int argc, const char** argv) {
     } else {
         free(input);
     }
+
+    free_res(&res);
     return 0;
 }

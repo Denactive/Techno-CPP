@@ -54,6 +54,9 @@ script:
     - chmod +x .codecov
     - ./.codecov
 
+    #safety:
+    - valgrind --error-exitcode=1 --tool=memcheck --leak-check=full ./program ../testing/logic/cases/17.txt
+
 after_success:
     # public:
     - bash <(curl -s https://codecov.io/bash)
@@ -61,6 +64,3 @@ after_success:
 
     #private
     #- bash <(curl -s https://codecov.io/bash) -t your-repository-upload-token
-
-#safety:
-    - valgrind --error-exitcode=1 --tool=memcheck --leak-check=full ./program ../testing/logic/cases/17.txt
