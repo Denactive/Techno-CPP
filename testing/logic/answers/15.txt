@@ -1,0 +1,20 @@
+=================
+[0]: line: 1; type: single-line;
+this is a quotes exception test
+-----------------
+[1]: line: 3; type: single-line;
+'a'
+-----------------
+[2]: line: 5; type: single-line;
+'/'
+-----------------
+[3]: line: 7; type: single-line;
+"but this should" <-- watch quotes here
+-----------------
+[4]: line: 8; type: multiline;
+
+//
+/
+/* /
+
+=================

@@ -1,0 +1,2 @@
+/*double*/
+/*comment*/ missing word //case

@@ -1,0 +1,2 @@
+hello world
+here is a /*multiline comment in a single row*/ of text

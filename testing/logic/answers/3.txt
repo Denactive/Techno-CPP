@@ -1,0 +1,4 @@
+=================
+[0]: line: 1; type: single-line;
+simple multiline
+=================

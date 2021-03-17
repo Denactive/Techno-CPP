@@ -1,0 +1,10 @@
+=================
+[0]: line: 1; type: single-line;
+double
+-----------------
+[1]: line: 2; type: single-line;
+comment
+-----------------
+[2]: line: 2; type: single-line;
+case
+=================

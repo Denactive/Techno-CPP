@@ -1,0 +1,4 @@
+=================
+[0]: line: 6; type: single-line;
+ pretty comment
+=================

@@ -1,0 +1,5 @@
+=================
+[0]: line: 1; type: multiline;
+multi
+line comments
+=================

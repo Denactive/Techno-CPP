@@ -1,0 +1,16 @@
+=================
+[0]: line: 1; type: single-line;
+line-1
+-----------------
+[1]: line: 2; type: single-line;
+line-2
+-----------------
+[2]: line: 3; type: single-line;
+line-3
+-----------------
+[3]: line: 6; type: single-line;
+line-6
+-----------------
+[4]: line: 9; type: single-line;
+line-9
+=================

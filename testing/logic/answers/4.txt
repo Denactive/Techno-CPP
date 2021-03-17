@@ -1,0 +1,6 @@
+=================
+[0]: line: 1; type: multiline;
+realy
+multiline
+
+=================
