@@ -23,6 +23,8 @@ int main(int argc, const char** argv) {
         return -1;
 
     string_sizex2* res = create_word_search_result_mt(num_tr, file_list, files_amount);
+    if (!res)
+        return -1;
 
     if (MT_DEBUG) {
         for (size_t i = 0; i < num_tr; ++i) {
