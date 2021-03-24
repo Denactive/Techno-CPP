@@ -18,12 +18,10 @@
 #include <unistd.h>
 #include <errno.h>
 
-#define DEBUG 1
+#define DEBUG 0
 #define QUOTES_CHECK 0
 #define MEMORY 0
 #define MEMORY_EXP_PATH 0
-
-#define BUFFER_SIZE 1024
 
 // 16 байт
 // оптимизация в виде представления файла номером не сработает, т.к.

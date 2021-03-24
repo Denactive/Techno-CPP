@@ -109,6 +109,122 @@ size_t gain_file_size(const char* filename) {
     return stat_buf.st_size;
 }
 
-int word_search_mt(const char* pattern, string_sizex2** word_search_result) {
-    return 0;
+void* thread_searcher(void* args) {
+    if (!args)
+        pthread_exit((void*)(-1));
+    // int word_search(const char* pattern, string_size_pair** word_search_result, size_t files_amount);
+    const char* pattern = ((thread_searcher_data*)args)->pattern;
+    string_size_pair** res = ((thread_searcher_data*)args)->word_search_result;
+    size_t files_amount = ((thread_searcher_data*)args)->files_amount;
+    size_t tr_no = ((thread_searcher_data*)args)->tr_no;
+    if (MT_DEBUG) {
+            printf("\nThread %zu got %zu files:\n", tr_no, files_amount);
+            for (size_t j = 0; j < files_amount; ++j) {
+                printf("\t[%zu] %s | %zu\n", tr_no, (*res)[j].name, (*res)[j].matches_amount);
+            }
+    }
+    if (word_search(pattern, res, files_amount))
+        pthread_exit((void *)(2));
+
+    if (merge_sort_desc(*res, files_amount)) {
+        printf("Error | sort failed in [%zu] thread \n", tr_no);
+        pthread_exit((void *)(-1));
+    }
+    pthread_exit(0);
+}
+
+string_size_pair* word_search_mt(const char* pattern, char** file_list, size_t files_amount, size_t num_tr) {
+    if (!pattern || !files_amount || !num_tr)
+        return NULL;
+
+    // создаем промежуточную структуру, которая назначит каждому треду свой список файлов для обработки
+    string_sizex2* res = create_word_search_result_mt(num_tr, file_list, files_amount);
+    if (!res)
+        return NULL;
+
+    if (MT_DEBUG) {
+        for (size_t i = 0; i < num_tr; ++i) {
+            printf("Thread %zu gets %zu files:\n", i, res[i].size);
+            for (size_t j = 0; j < res[i].size; ++j) {
+                printf("\t%s | %zu\n", res[i].res[j].name, res[i].res[j].matches_amount);
+            }
+        }
+    }
+
+    // раздаем потокам задачи - выделенный в предыдущей структуре список файлов
+    pthread_t ptid[num_tr];
+    thread_searcher_data data[num_tr];
+    void* exit_status[num_tr];  // проверка потоков на наличие ошибки
+    for (size_t i = 0; i < num_tr; ++i) {
+        if (MT_DEBUG)
+            printf("\tthread creation [%zu]\n", i);
+        data[i].tr_no = i;
+        data[i].files_amount = res[i].size;
+        data[i].word_search_result = &(res[i].res);
+        data[i].pattern = pattern;
+        if (pthread_create(&ptid[i], NULL, thread_searcher, &(data[i]))) {
+            if (MT_DEBUG)
+                printf("\tthread creation failed\n");
+            // не удалось выделить i-ый поток - сворачиваем остальные. Их ошибки не важны
+            for (size_t j = 0; j < i; ++j)
+                pthread_join(ptid[i], NULL);
+            clear_word_search_result_mt(&res, num_tr);
+            return NULL;
+        }
+    }
+
+    // ожидание потоков, сбор ошибок
+    int join_status = 0;
+    for (size_t i = 0; i < num_tr; ++i) {
+        pthread_join(ptid[i], (void**)&exit_status[i]);
+        if (exit_status[i] == (void *)(-1) && exit_status[i] == 0)
+            join_status = -1;  // fatal
+        if (exit_status[i] == (void *)(-2) && exit_status[i] == 0)
+            join_status = 2;  // NULL pattern or word_search_result addr | non fatal | impossible to get here
+    }
+    if (join_status == -1) {
+        clear_word_search_result_mt(&res, num_tr);
+        return NULL;
+    }
+
+    if (MT_DEBUG) {
+        printf("\nafter sort\n");
+        for (size_t i = 0; i < num_tr; ++i) {
+            printf("Thread %zu gets %zu files:\n", i, res[i].size);
+            for (size_t j = 0; j < res[i].size; ++j) {
+                printf("\t%s | %zu\n", res[i].res[j].name, res[i].res[j].matches_amount);
+            }
+        }
+    }
+
+    // merge sorted results
+    string_size_pair* sorted_res = (string_size_pair*)calloc(files_amount, sizeof(string_size_pair));
+    if (!sorted_res) {
+        clear_word_search_result_mt(&res, num_tr);
+        return NULL;
+    }
+    // счетчики-итераторы для каждого из потоков
+    size_t pos[num_tr];
+    for (size_t i = 0; i < num_tr; ++i)
+        pos[i] = 0;
+    size_t pos_sum = 0;  // сумма итераторов во всех массивых = итератору в итоговом массиве sorted_res
+    size_t index_max = 0;  // храним не сам максимум, а его индекс
+    while (pos_sum != files_amount) {
+        // нулевой тред ВСЕГДА будет обладать наибольшим числом обработанных файлов
+        index_max = 0;
+        for (size_t i = 1; i < num_tr; ++i) {
+            // если элементы в массиве данного треда закончиись - пропустить
+            if (res[i].size == pos[i])
+                continue;
+            if (res[i].res[pos[i]].matches_amount > res[index_max].res[pos[index_max]].matches_amount)
+                index_max = i;
+        }
+        sorted_res[pos_sum].name = res[index_max].res[pos[index_max]].name;
+        sorted_res[pos_sum].matches_amount = res[index_max].res[pos[index_max]].matches_amount;
+        pos[index_max]++;
+        pos_sum++;
+    }
+    // слили результаты успешно
+    clear_word_search_result_mt(&res, num_tr);
+    return sorted_res;
 }

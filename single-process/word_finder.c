@@ -45,7 +45,6 @@ int get_files_from_dir(const char* dir_name, const char* extension, char*** file
     if (last_point && *(last_point + 1) == '\0')
         return 0;
 
-    errno = 0;
     if (DEBUG)
         printf("\ttrying to open %s directory\n", dir_name);
     DIR *dir = opendir(dir_name);
@@ -54,7 +53,6 @@ int get_files_from_dir(const char* dir_name, const char* extension, char*** file
         return -1;
     }
     struct dirent *entry = NULL;
-    // TODO: readdir_r для мультипотока
     while (1) {
         errno = 0;
         entry = readdir(dir);
@@ -232,11 +230,7 @@ int word_search(const char* pattern, string_size_pair** word_search_result, size
         if (DEBUG)
             printf("\t%s\n", (*word_search_result)[i].name);
 
-        errno = 0;
         (*word_search_result)[i].matches_amount = check_str(str, pattern);
-        if (errno == 2)
-            return -1;
-
         // file mapping closing
         if (munmap((void*)str, stat_buf.st_size))
             printf("Error | failed to unmap %s\n", (*word_search_result)[i].name);
@@ -267,12 +261,13 @@ char* file_input(const char* filename, struct stat* stat_buf) {
 }
 
 size_t check_str (const char* str, const char* pattern) {
+    if (!str || !pattern)
+        return 0;
     int double_quote_flag = 0;
     int single_quote_flag = 0;
     size_t count = 0;
     while (*str != '\0' && *str != 0 && *str != EOF) {
         switch (*str) {
-            //TODO: escaping \' \"
             case '\"':
                 // do not raise double_quote_flag if a single quote was found
                 if (QUOTES_CHECK) printf("\t\t\" found s: %d | d: %d\n", single_quote_flag, double_quote_flag);
@@ -306,8 +301,7 @@ size_t check_str (const char* str, const char* pattern) {
                     if (!str) {
                         if (DEBUG)
                             printf("\tError | single line failed\n");
-                        errno = 2;
-                        return 0;
+                        return count;
                     }
                 }
                 if (*(str + 1) == '*') {
@@ -315,8 +309,7 @@ size_t check_str (const char* str, const char* pattern) {
                     if (!str) {
                         if (DEBUG)
                             printf("\tError | multiline failed\n");
-                        errno = 2;
-                        return 0;
+                        return count;
                     }
                 }
                 break;
@@ -326,11 +319,8 @@ size_t check_str (const char* str, const char* pattern) {
                 for (; pattern[j] != '\0' && *str != '\0' && *str != EOF && *str != 0 && pattern[j] == str[j]; ++j);
                 if (pattern[j] != '\0')
                     match = 0;
-                if (match) {
+                if (match)
                     count++;
-                    if (DEBUG)
-                        printf("\t\t Found match [%zu]\n", count);
-                }
                 str += (j + 1);
                 break;
             }

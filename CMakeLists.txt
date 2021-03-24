@@ -6,11 +6,14 @@ set(CMAKE_C_FLAGS "-g -coverage -O0 -Wall -Werror -Wpedantic -fprofile-arcs -fte
 set(CMAKE_CXX_FLAGS "-g -coverage -O0 -Wall -Werror -Wpedantic -fprofile-arcs -ftest-coverage -fPIC")
 set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
 
+find_library(PTHREAD_LIBRARY pthread)
 #include_directories(single-process/)
 #add_executable(program single-process/program.c single-process/word_finder.c)
 
 include_directories(single-process/ multi-thread/)
 add_executable(program-mt multi-thread/program-MT.c multi-thread/word_finder_MT.c single-process/word_finder.c)
+target_link_libraries(program-mt ${PTHREAD_LIBRARY} -lpthread)
+
 
 #enable_testing()
 #find_package(GTest REQUIRED)

@@ -1,8 +1,13 @@
-for j in {0..1000}
+for i in {9..50}
 do
-	for i in {0..994}
+	touch cases/"$i".c
+	test_amount=$((1000 + $i));
+	for ((j=1; j < $test_amount; j++))
 	do
-	echo -n "a" >> cases/2.c
+		for ((k = 1; k < 1001; k++))
+		do
+			echo -n "a" >> cases/"$i".c
+		done
+		echo -n "test" >> cases/"$i".c
 	done
-	echo -n "test" >> cases/2.c
 done

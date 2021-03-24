@@ -22,19 +22,22 @@ int main(int argc, const char** argv) {
     if (get_files_from_dir(argv[1], ".c", &file_list, &files_amount))
         return -1;
 
-    string_sizex2* res = create_word_search_result_mt(num_tr, file_list, files_amount);
-    if (!res)
-        return -1;
+    //time_t start = time(NULL);
+    clock_t start = clock();
+    string_size_pair* res = word_search_mt(argv[2], file_list, files_amount, num_tr);
+    //time_t end = time(NULL);
+    clock_t end = clock();
 
-    if (MT_DEBUG) {
-        for (size_t i = 0; i < num_tr; ++i) {
-            printf("Thread %zu gets %zu files:\n", i, res[i].size);
-            for (size_t j = 0; j < res[i].size; ++j) {
-                printf("\t%s | %zu\n", res[i].res[j].name, res[i].res[j].matches_amount);
-            }
-        }
+    if (!res) {
+        clear_file_list(&file_list, files_amount);
+        return -1;
     }
-    clear_word_search_result_mt(&res, num_tr);
+
+    print_res(res, files_amount);
+//    printf("num_tr: %zu | execution time: %f\n", num_tr, difftime(end, start));
+    printf("num_tr: %zu | execution time: %lf\n", num_tr, (double)(end - start) / CLOCKS_PER_SEC);
+
+    free(res);
     clear_file_list(&file_list, files_amount);
     return 0;
 }
@@ -49,6 +52,9 @@ void clear_file_list(char*** file_list, size_t files_amount) {
 }
 
 void print_res(const string_size_pair* word_search_result, size_t files_amount) {
+    if (!word_search_result) {
+        printf("no files found\n");
+    }
     for (size_t i = 0; i < files_amount; i++) {
         printf("%s: %zu\n", word_search_result[i].name, word_search_result[i].matches_amount);
     }
