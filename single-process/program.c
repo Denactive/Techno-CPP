@@ -49,6 +49,8 @@ int main(int argc, const char** argv) {
         return -1;
     }
 
+    if (DEBUG)
+        printf("\tafter sort\n");
     print_res(word_search_result, files_amount);
     clear_mem(&file_list, &word_search_result, files_amount);
     return 0;
