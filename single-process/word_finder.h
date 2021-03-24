@@ -37,8 +37,6 @@ typedef struct {
 int get_files_from_dir(const char* dir_name, const char* extension, char*** file_list, size_t* cnt);
 string_size_pair* create_word_search_result(char** file_list, size_t files_amount);
 int word_search(const char* pattern, string_size_pair** word_search_result, size_t files_amount);
-char* execute_line_comment(const char *str);
-char* execute_multiline_comment(const char *str);
 int merge_sort_desc(string_size_pair* arr, size_t len);
 int merge_desc(string_size_pair* l, size_t lsize, string_size_pair* r, size_t rsize, string_size_pair* res);
 #endif //HW1_WORD_FINDER_H

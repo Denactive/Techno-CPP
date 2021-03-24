@@ -198,7 +198,9 @@ int expand_string_array(char*** file_list, size_t cnt, size_t nmemb) {
     }
     return 0;
 }
-//this function allocates memory!
+// this function allocates memory!
+// create_word_search_result allocates memory for string_size_pair array
+// and copies file names in "name" field and initializes "matches_amount" field to 0
 string_size_pair* create_word_search_result(char** file_list, size_t files_amount) {
     if (!file_list || !files_amount)
         return NULL;
@@ -255,9 +257,12 @@ char* file_input(const char* filename, struct stat* stat_buf) {
 
     // using mmap
     void* content = NULL;
-    if ((content = mmap(0, stat_buf->st_size, PROT_READ, MAP_SHARED, fdin, 0)) == MAP_FAILED)
+    if ((content = mmap(0, stat_buf->st_size, PROT_READ, MAP_SHARED, fdin, 0)) == MAP_FAILED) {
+        close(fdin);
         return NULL;
+    }
 
+    close(fdin);
     return (char*)content;
 }
 
