@@ -9,6 +9,7 @@ char* execute_multiline_comment(const char *str);
 char* expand_path(const char *path, const char *dir);
 int expand_string_array(char*** file_list, size_t cnt, size_t nmemb);
 size_t check_str (const char* str, const char* pattern);
+char to_lower_case(char ch);
 
 char* execute_line_comment(const char *str) {
     if (!str)
@@ -41,7 +42,7 @@ int get_files_from_dir(const char* dir_name, const char* extension, char*** file
     if (!dir_name || !file_list || !cnt)
         return -1;
     // smtg/. & smtg/.. cases
-    char* last_point = strrchr(dir_name, '.');
+    char* last_point = (char *)strrchr(dir_name, '.');
     if (last_point && *(last_point + 1) == '\0')
         return 0;
 
@@ -90,7 +91,7 @@ int get_files_from_dir(const char* dir_name, const char* extension, char*** file
             int match = 0;
             if (extension) {
                 char *type_extension = strstr(entry->d_name, extension);
-                if (type_extension && *(type_extension + 2) == '\0')
+                if (type_extension && *(type_extension + strlen(extension)) == '\0')
                     match = 1;
             } else {
                 match = 1;
@@ -107,7 +108,7 @@ int get_files_from_dir(const char* dir_name, const char* extension, char*** file
                     if (MEMORY)
                         printf("\tAfter | Filelist is %p\n", (void*)(*file_list));
                     size_t line_len = strlen(entry_path);
-                    (*file_list)[*cnt] = calloc((line_len + 1), sizeof(char));
+                    (*file_list)[*cnt] = (char *)calloc((line_len + 1), sizeof(char));
                     if (!strncpy((*file_list)[*cnt], entry_path, line_len)) {
                         free((*file_list)[*cnt]);
                     } else {
@@ -130,7 +131,7 @@ int get_files_from_dir(const char* dir_name, const char* extension, char*** file
 char* expand_path(const char *path, const char *dir) {
     char* res = NULL;
     int bs_flag = 0;
-    char* last_backslash = strrchr(path, '/');
+    char* last_backslash = strrchr((char *)path, '/');
     if (last_backslash)
         if (*(last_backslash + 1) == '\0')
         bs_flag = 1;
@@ -202,7 +203,7 @@ int expand_string_array(char*** file_list, size_t cnt, size_t nmemb) {
 string_size_pair* create_word_search_result(char** file_list, size_t files_amount) {
     if (!file_list || !files_amount)
         return NULL;
-    string_size_pair* res = calloc(files_amount, sizeof(string_size_pair));
+    string_size_pair* res = (string_size_pair *)calloc(files_amount, sizeof(string_size_pair));
     if (!res) {
         if (DEBUG)
             printf("\tfailed to calloc\n");
@@ -270,25 +271,21 @@ size_t check_str (const char* str, const char* pattern) {
         switch (*str) {
             case '\"':
                 // do not raise double_quote_flag if a single quote was found
-                if (QUOTES_CHECK) printf("\t\t\" found s: %d | d: %d\n", single_quote_flag, double_quote_flag);
                 if (!single_quote_flag) {
                     if (double_quote_flag)
                         double_quote_flag = 0;
                     else
                         double_quote_flag = 1;
                 }
-                if (QUOTES_CHECK) printf("\t\t        s: %d | d: %d\n", single_quote_flag, double_quote_flag);
                 str++;
                 break;
             case '\'':
-                if (QUOTES_CHECK) printf("\t\t\' found s: %d | d: %d\n", single_quote_flag, double_quote_flag);
                 if (!double_quote_flag) {
                     if (single_quote_flag)
                         single_quote_flag = 0;
                     else
                         single_quote_flag = 1;
                 }
-                if (QUOTES_CHECK) printf("\t\t        s: %d | d: %d\n", single_quote_flag, double_quote_flag);
                 str++;
                 break;
             case '/':
@@ -316,7 +313,7 @@ size_t check_str (const char* str, const char* pattern) {
             default: {
                 size_t j = 0;
                 int match = 1;
-                for (; pattern[j] != '\0' && *str != '\0' && *str != EOF && *str != 0 && pattern[j] == str[j]; ++j);
+                for (; pattern[j] != '\0' && *str != '\0' && *str != EOF && to_lower_case(pattern[j]) == to_lower_case(str[j]); ++j);
                 if (pattern[j] != '\0')
                     match = 0;
                 if (match)
@@ -345,7 +342,7 @@ int merge_sort_desc(string_size_pair* arr, size_t len) {
     if (merge_sort_desc(arr + lsize, rsize))
         return -1;
 
-    string_size_pair* tmp = calloc(len, sizeof(string_size_pair));
+    string_size_pair* tmp = (string_size_pair *)calloc(len, sizeof(string_size_pair));
     if (!tmp)
         return -1;
 
@@ -384,3 +381,8 @@ int merge_desc(string_size_pair* l, size_t lsize, string_size_pair* r, size_t rs
     return 0;
 }
 
+char to_lower_case(char ch) {
+    if (ch >= 'A' && ch <= 'Z')
+        ch += ('a' - 'A');
+    return ch;
+}

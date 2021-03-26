@@ -19,7 +19,6 @@
 #include <errno.h>
 
 #define DEBUG 0
-#define QUOTES_CHECK 0
 #define MEMORY 0
 #define MEMORY_EXP_PATH 0
 

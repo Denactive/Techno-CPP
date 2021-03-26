@@ -6,7 +6,6 @@
 #define HW1_WORD_FINDER_MT_H
 
 #include <pthread.h>
-#include <time.h>
 #include "word_finder.h"
 
 #define MT_DEBUG 0

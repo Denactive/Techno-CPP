@@ -12,9 +12,6 @@ int main(int argc, const char** argv) {
         printf("Please pass a source path and a word to search\n");
         return -1;
     }
-    size_t num_proc = get_nprocs();
-    if (DEBUG)
-        printf("detected %zu available processors detected\n", num_proc);
 
     char** file_list = NULL;
     size_t files_amount = 0;
@@ -32,6 +29,7 @@ int main(int argc, const char** argv) {
         clear_mem(&file_list, &word_search_result, files_amount);
         return -1;
     }
+
     if (word_search(argv[2], &word_search_result, files_amount)) {
         printf("Error | word reading failed\n");
         clear_mem(&file_list, &word_search_result, files_amount);
@@ -57,7 +55,7 @@ int main(int argc, const char** argv) {
 }
 
 void clear_mem(char*** file_list, string_size_pair** res, size_t num) {
-    for (size_t i = 0; i < num; i++) {
+    for (size_t i = 0; i < num; ++i) {
         if (DEBUG)
             printf("\twonna clear [%zu] %s\n", i, (*file_list)[i]);
         free((*file_list)[i]);
@@ -67,7 +65,7 @@ void clear_mem(char*** file_list, string_size_pair** res, size_t num) {
 }
 
 void print_res(const string_size_pair* word_search_result, size_t files_amount) {
-    for (size_t i = 0; i < files_amount; i++) {
+    for (size_t i = 0; i < files_amount; ++i) {
         printf("%s: %zu\n", word_search_result[i].name, word_search_result[i].matches_amount);
     }
 }

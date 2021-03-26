@@ -13,18 +13,27 @@ size_t gain_file_size(const char* filename);
 string_sizex2* create_word_search_result_mt(size_t num_tr, char** file_list, size_t files_amount) {
     if (!file_list || !files_amount || !num_tr)
         return NULL;
+    // переместил эти определения сюда, чтобы компилятор gtest не ругался на goto
+    // инициализацию оставил в том месте, где эти переменные используются
     string_sizex2* res = NULL;
+    string_size_pair* sorted_by_size = NULL;
+    char*** file_list_for_thread = NULL;
+    size_t mod = 0;
     // распределим файлы в списке по убыванию их размера
-    size_t res_sizes[num_tr];
-    size_t* file_sizes = (size_t *)calloc(files_amount, sizeof(size_t));
-    if (!file_sizes)
+    size_t* res_sizes = (size_t*)calloc(num_tr, sizeof(size_t));
+    if (!res_sizes)
         return NULL;
+    size_t* file_sizes = (size_t *)calloc(files_amount, sizeof(size_t));
+    if (!file_sizes) {
+        free(res_sizes);
+        return NULL;
+    }
     for (size_t i = 0; i < files_amount; ++i) {
         file_sizes[i] = gain_file_size(file_list[i]);
     }
 
     // чтобы не писать еще одну сортировку
-    string_size_pair* sorted_by_size = create_word_search_result(file_list, files_amount);
+    sorted_by_size = create_word_search_result(file_list, files_amount);
     if (!sorted_by_size)
         goto free_file_sizes;
     for (size_t i = 0; i < files_amount; ++i)
@@ -38,14 +47,14 @@ string_sizex2* create_word_search_result_mt(size_t num_tr, char** file_list, siz
     for (size_t i = 0; i < num_tr; ++i)
         res_sizes[i] = files_amount / num_tr;
     // остаток файлов тоже распределяем "равномерно"
-    size_t mod = files_amount % num_tr;
+    mod = files_amount % num_tr;
     while (mod) {
         res_sizes[files_amount % num_tr - mod]++;
         mod--;
     }
 
     // распределяем файлы по потокам
-    char*** file_list_for_thread = (char***)calloc(num_tr, sizeof(char **));
+    file_list_for_thread = (char***)calloc(num_tr, sizeof(char **));
     if (!file_list_for_thread)
         goto free_file_sizes;
     for (size_t i = 0; i < num_tr; ++i) {
@@ -152,9 +161,19 @@ string_size_pair* word_search_mt(const char* pattern, char** file_list, size_t f
     }
 
     // раздаем потокам задачи - выделенный в предыдущей структуре список файлов
-    pthread_t ptid[num_tr];
-    thread_searcher_data data[num_tr];
-    void* exit_status[num_tr];  // проверка потоков на наличие ошибки
+    //pthread_t ptid[num_tr];
+    pthread_t* ptid = (pthread_t*)calloc(num_tr, sizeof(pthread_t));
+    if (!ptid) {
+        free(res);
+        return NULL;
+    }
+    thread_searcher_data* data = (thread_searcher_data*)calloc(num_tr, sizeof(thread_searcher_data));
+    if (!data) {
+        free(res);
+        free(ptid);
+        return NULL;
+    }
+    void* exit_status = 0;
     for (size_t i = 0; i < num_tr; ++i) {
         if (MT_DEBUG)
             printf("\tthread creation [%zu]\n", i);
@@ -169,23 +188,30 @@ string_size_pair* word_search_mt(const char* pattern, char** file_list, size_t f
             for (size_t j = 0; j < i; ++j)
                 pthread_join(ptid[i], NULL);
             clear_word_search_result_mt(&res, num_tr);
+            free(res);
+            free(ptid);
+            free(data);
             return NULL;
         }
     }
+    free(data);
 
     // ожидание потоков, сбор ошибок
     int join_status = 0;
     for (size_t i = 0; i < num_tr; ++i) {
-        pthread_join(ptid[i], (void**)&exit_status[i]);
-        if (exit_status[i] == (void *)(-1) && exit_status[i] == 0)
+        pthread_join(ptid[i], (void**)&exit_status);
+        if (exit_status == (void *)(-1) && exit_status == 0)
             join_status = -1;  // fatal
-        if (exit_status[i] == (void *)(-2) && exit_status[i] == 0)
+        if (exit_status == (void *)(2) && exit_status == 0)
             join_status = 2;  // NULL pattern or word_search_result addr | non fatal | impossible to get here
     }
     if (join_status == -1) {
         clear_word_search_result_mt(&res, num_tr);
+        free(res);
+        free(ptid);
         return NULL;
     }
+    free(ptid);
 
     if (MT_DEBUG) {
         printf("\nafter sort\n");
@@ -201,17 +227,28 @@ string_size_pair* word_search_mt(const char* pattern, char** file_list, size_t f
     string_size_pair* sorted_res = (string_size_pair*)calloc(files_amount, sizeof(string_size_pair));
     if (!sorted_res) {
         clear_word_search_result_mt(&res, num_tr);
+        free(res);
+        free(ptid);
         return NULL;
     }
     // счетчики-итераторы для каждого из потоков
-    size_t pos[num_tr];
-    for (size_t i = 0; i < num_tr; ++i)
-        pos[i] = 0;
+    size_t* pos = (size_t*)calloc(num_tr, sizeof(size_t));
+//    for (size_t i = 0; i < num_tr; ++i)
+//        pos[i] = 0;
+    if (!pos) {
+        clear_word_search_result_mt(&res, num_tr);
+        free(res);
+        free(ptid);
+        return NULL;
+    }
     size_t pos_sum = 0;  // сумма итераторов во всех массивых = итератору в итоговом массиве sorted_res
     size_t index_max = 0;  // храним не сам максимум, а его индекс
     while (pos_sum != files_amount) {
-        // нулевой тред ВСЕГДА будет обладать наибольшим числом обработанных файлов
+        // за начальное значение берем наименший по номеру тред, так, чтобы чтение по индексу i
+        // было валидно, т.е. pos[index_max] < числа файлов в списке треда с номером index_max
         index_max = 0;
+        while (res[index_max].size == pos[index_max])
+            index_max++;
         for (size_t i = 1; i < num_tr; ++i) {
             // если элементы в массиве данного треда закончиись - пропустить
             if (res[i].size == pos[i])
@@ -226,5 +263,7 @@ string_size_pair* word_search_mt(const char* pattern, char** file_list, size_t f
     }
     // слили результаты успешно
     clear_word_search_result_mt(&res, num_tr);
+    free(res);
+    free(pos);
     return sorted_res;
 }
