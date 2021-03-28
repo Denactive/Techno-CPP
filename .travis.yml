@@ -48,7 +48,7 @@ script:
     - mkdir ../testing/empty_folder/
     - mkdir ../testing/manyfiles/cases/
     - cd ../testing/manyfiles/
-    - chmod +x manyfiles.sh
+    - chmod +x many_files.sh
     - ./manyfiles.sh
     - cd -
     - ctest --output-on-failure
