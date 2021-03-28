@@ -49,7 +49,7 @@ script:
     - mkdir ../testing/manyfiles/cases/
     - cd ../testing/manyfiles/
     - chmod +x many_files.sh
-    - ./manyfiles.sh
+    - ./many_files.sh
     - cd -
     - ctest --output-on-failure
     #- gcovr -r ..

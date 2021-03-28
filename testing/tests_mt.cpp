@@ -67,7 +67,7 @@ TEST(LogicTest, Main) {
     free(buf);
 }
 
-TEST(LogicTest, BigFiles) {
+TEST(LogicTest, ManyFiles) {
     std::cout << "Logic test - Many Files" << std::endl;
     std::string answer_filename = "../testing/manyfiles/answer.txt";
     std::fstream is(answer_filename);

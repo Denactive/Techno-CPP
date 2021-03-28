@@ -59,9 +59,9 @@ TEST(LogicTest, Main) {
     free(buf);
 }
 
-TEST(LogicTest, BigFiles) {
-    std::cout << "Logic test - Big Files" << std::endl;
-    std::string answer_filename = "../testing/bigfiles/answer.txt";
+TEST(LogicTest, ManyFiles) {
+    std::cout << "Logic test - Many Files" << std::endl;
+    std::string answer_filename = "../testing/manyfiles/answer.txt";
     std::fstream is(answer_filename);
     ASSERT_TRUE(is.is_open());
     std::string answer_str;
@@ -80,7 +80,7 @@ TEST(LogicTest, BigFiles) {
         close(fd[0]);
         dup2(fd[1], STDOUT_FILENO);
 
-        execl(binary_file_name, binary_file_name, "../testing/bigfiles/", "test", NULL);
+        execl(binary_file_name, binary_file_name, "../testing/manyfiles/", "test", NULL);
 
         close(fd[1]);
         exit(0);
