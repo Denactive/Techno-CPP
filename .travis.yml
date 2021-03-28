@@ -62,7 +62,7 @@ script:
     - ./.codecov
 
     #safety:
-    - valgrind --error-exitcode=1 --tool=memcheck --leak-check=full ./program ../testing/logic/
+    - valgrind --error-exitcode=1 --tool=memcheck --leak-check=full ./program ../testing/logic/ test
 
 after_success:
     # public:
