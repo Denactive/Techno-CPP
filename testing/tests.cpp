@@ -4,7 +4,7 @@
 #include <iostream>
 #include <unistd.h>
 
-#define BUFFER_SIZE 2048
+#define BUFFER_SIZE 4096
 
 extern "C" {
     #include "word_finder.h"
@@ -89,20 +89,21 @@ TEST(LogicTest, ManyFiles) {
     // Родительский процесс
     close(fd[1]);
 
-    ssize_t sz;
-    char* buf = (char*)calloc(BUFFER_SIZE, sizeof(char));
-    int err = 0;
-    if (!buf)
-        err = -1;
-    ASSERT_EQ(err, 0);
+    ssize_t sz = 1;
+    sym = '\0';
+    std::string res;
+    while (true) {
+        sz = read(fd[0], &sym, 1);
+        if (sz == 0)
+            break;
+        res += sym;//chunk;
+    }
 
-    sz = read(fd[0], buf, BUFFER_SIZE);
     close(fd[0]);
-    ASSERT_GT(sz, 0);
+    printf("%zu syms read\n", sz);
     waitpid(pid_fork, &status, 0);
 
-    EXPECT_STREQ(buf, answer_str.c_str());
-    free(buf);
+    EXPECT_STREQ(res.c_str(), answer_str.c_str());
 }
 
 TEST(ErrorTest, EmptyFolder) {

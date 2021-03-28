@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <time.h>
 
-#define BUFFER_SIZE 2048
+#define BUFFER_SIZE 4096
 
 extern "C" {
 #include "word_finder_MT.h"
