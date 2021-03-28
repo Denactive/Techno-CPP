@@ -1,4 +1,4 @@
-for i in {9..50}
+for i in {1..50}
 do
 	touch cases/"$i".c
 	test_amount=$((1000 + $i));
