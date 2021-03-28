@@ -19,7 +19,7 @@ compiler:
 env:
     # список переменных окружения, влияющих на матрицу сборки:
     - BUILD_CONFIGURATION=Debug
-    - BUILD_CONFIGURATION=Release
+    #- BUILD_CONFIGURATION=Release
     #- TARGET_CPU=amd64
     
 matrix:
