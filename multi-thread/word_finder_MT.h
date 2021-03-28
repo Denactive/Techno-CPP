@@ -23,6 +23,7 @@ typedef struct {
 } thread_searcher_data;
 
 string_sizex2* create_word_search_result_mt(size_t num_tr, char** file_list, size_t files_amount);
+//void* word_search_mt(const char* pattern, char** file_list, size_t files_amount, size_t num_tr);
 string_size_pair* word_search_mt(const char* pattern, char** file_list, size_t files_amount, size_t num_tr);
 void clear_word_search_result_mt(string_sizex2** word_search_result, size_t num_tr);
 void* thread_searcher(void* args);

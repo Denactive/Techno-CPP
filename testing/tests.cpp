@@ -12,7 +12,6 @@ extern "C" {
 }
 
 const char binary_file_name [] = "program";
-const char binary_file_name_2 [] = "program-mt";
 
 TEST(LogicTest, Main) {
     std::cout << "Logic test" << std::endl;

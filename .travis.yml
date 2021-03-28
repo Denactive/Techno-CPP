@@ -1,0 +1,66 @@
+#Лучший гайд: https://habr.com/ru/post/329264/
+
+dist:     focal    # используем Ubuntu 20.04 Focal Fossa
+sudo:     required  # используем Virtual Machine (а не Docker container)
+
+language: c       # на практике разницы между специфичным для C++ окружением
+                    # и, скажем, python -- никакой. Но пусть будет cpp.
+
+os:
+    # будем прогонять CI и на Linux, и на Mac OS X...
+    - linux
+    #- osx
+
+compiler:
+    # ... и с помощью GCC, и Clang
+    - gcc
+    #- clang
+
+env:
+    # список переменных окружения, влияющих на матрицу сборки:
+    - BUILD_CONFIGURATION=Debug
+    - BUILD_CONFIGURATION=Release
+    #- TARGET_CPU=amd64
+    
+matrix:
+    exclude:
+        # вручную исключим ненужные элементы из матрицы сборки:
+        - os:       osx
+          compiler: gcc
+
+install:
+    # скрипт настройки среды и установки зависимостей:
+    - source testing/ci-install-$TRAVIS_OS_NAME.sh
+
+script:
+
+    #accuracy:
+    - cppcheck --error-exitcode=1 --suppress=missingIncludeSystem --enable=performance,portability ../single-process/
+
+    # скрипт сборки и тестирования проекта:
+    - mkdir build
+    - cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_CONFIGURATION -DCMAKE_CXX_FLAGS="--coverage"
+    # -DTARGET_CPU=$TARGET_CPU
+    - cmake --build .
+    
+    - ctest --output-on-failure
+    #- gcovr -r ..
+    - lcov --directory . --capture --output-file coverage.info
+    - lcov --remove coverage.info '/usr/*' "${HOME}"'/.cache/*' --output-file coverage.info
+    - lcov --list coverage.info
+    #- codecov
+    - curl -s https://codecov.io/bash > .codecov
+    - chmod +x .codecov
+    - ./.codecov
+
+    #safety:
+    - valgrind --error-exitcode=1 --tool=memcheck --leak-check=full ./program ../testing/logic/
+
+after_success:
+    # public:
+    - bash <(curl -s https://codecov.io/bash)
+    
+
+    #private
+    #- bash <(curl -s https://codecov.io/bash) -t your-repository-upload-token

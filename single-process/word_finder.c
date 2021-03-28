@@ -267,7 +267,7 @@ size_t check_str (const char* str, const char* pattern) {
     int double_quote_flag = 0;
     int single_quote_flag = 0;
     size_t count = 0;
-    while (*str != '\0' && *str != 0 && *str != EOF) {
+    while (*str != '\0' && *str != EOF) {
         switch (*str) {
             case '\"':
                 // do not raise double_quote_flag if a single quote was found

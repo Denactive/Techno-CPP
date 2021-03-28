@@ -23,7 +23,7 @@ int main(int argc, const char** argv) {
         return -1;
 
     //clock_t start = clock();
-    string_size_pair* res = word_search_mt(argv[2], file_list, files_amount, num_tr);
+    string_size_pair* res = (string_size_pair *)word_search_mt(argv[2], file_list, files_amount, num_tr);
     //clock_t end = clock();
     if (!res && !files_amount) {
         printf("no .c files found\n");
@@ -40,7 +40,8 @@ int main(int argc, const char** argv) {
 
     free(res);
     clear_file_list(&file_list, files_amount);
-    return 0;
+    pthread_exit(NULL);
+    // return 0;
 }
 
 void clear_file_list(char*** file_list, size_t files_amount) {
