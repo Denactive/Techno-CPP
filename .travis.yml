@@ -45,6 +45,11 @@ script:
     - cmake --build .
 
     - mkdir ../testing/empty_folder/
+    - mkdir ../testing/manyfiles/cases/
+    - cd ../testing/manyfiles/
+    - chmod +x manyfiles.sh
+    - ./manyfiles.sh
+    - cd -
     - ctest --output-on-failure
     #- gcovr -r ..
     - lcov --directory . --capture --output-file coverage.info

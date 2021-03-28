@@ -18,7 +18,7 @@
 #include <unistd.h>
 #include <errno.h>
 
-#define DEBUG 1
+#define DEBUG 0
 #define MEMORY 0
 #define MEMORY_EXP_PATH 0
 

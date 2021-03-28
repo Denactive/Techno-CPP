@@ -102,7 +102,7 @@ size_t gain_file_size(const char* filename) {
     if ((fdin = open(filename, O_RDONLY)) < 0) {
         if (DEBUG)
             printf("Error | Impossible to gain file size | Usage %s invalid\n", filename);
-        return -1;
+        return 0;
     }
 
     // gain file size
@@ -110,7 +110,8 @@ size_t gain_file_size(const char* filename) {
     if (fstat(fdin, &stat_buf) < 0) {
         if (DEBUG)
             printf("Error | Impossible to gain %s file size| fstat error\n", filename);
-        return -1;
+        close(fdin);
+        return 0;
     }
     close(fdin);
     return stat_buf.st_size;

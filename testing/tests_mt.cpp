@@ -68,8 +68,8 @@ TEST(LogicTest, Main) {
 }
 
 TEST(LogicTest, BigFiles) {
-    std::cout << "Logic test - Big Files" << std::endl;
-    std::string answer_filename = "../testing/bigfiles/answer.txt";
+    std::cout << "Logic test - Many Files" << std::endl;
+    std::string answer_filename = "../testing/manyfiles/answer.txt";
     std::fstream is(answer_filename);
     ASSERT_TRUE(is.is_open());
     std::string answer_str;
@@ -80,9 +80,9 @@ TEST(LogicTest, BigFiles) {
 
     char** file_list = NULL;
     size_t files_amount = 0;
-    int err_dir = get_files_from_dir("../testing/bigfiles/", ".c", &file_list, &files_amount);
+    int err_dir = get_files_from_dir("../testing/manyfiles/", ".c", &file_list, &files_amount);
     ASSERT_EQ(err_dir, 0);
-    ASSERT_EQ(files_amount, 50);
+    ASSERT_EQ(files_amount, 500);
 
     for (int i = 4; i <= 16; ++i) {
         std::cout << "\t" << i << " Threads:" << std::endl;

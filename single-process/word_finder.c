@@ -220,14 +220,16 @@ int word_search(const char* pattern, string_size_pair** word_search_result, size
     if (!files_amount)
         return 0;
     for (size_t i = 0; i < files_amount; ++i) {
-        struct stat stat_buf = {0};
         if (DEBUG)
             printf("\t reading %s\n", (*word_search_result)[i].name);
 
+        struct stat stat_buf;
         char* str = file_input((*word_search_result)[i].name, &stat_buf);
-        if (!str)
+        if (!str) {
+            if (munmap((void*)str, stat_buf.st_size))
+                printf("Error | failed to unmap %s\n", (*word_search_result)[i].name);
             continue;
-
+        }
         if (DEBUG)
             printf("\t%s\n", (*word_search_result)[i].name);
 
