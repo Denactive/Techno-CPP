@@ -290,27 +290,6 @@ TEST(InnerFuncTest, get_files_from_dir_c) {
     free(file_list);
 }
 
-TEST(InnerFuncTest, get_files_from_dir_cpp) {
-    std::cout << "Inner functions test - get_files_from_dir (.cpp)" << std::endl;
-    char** file_list = NULL;
-    size_t files_amount = 0;
-    int err = get_files_from_dir("../testing/dir_reading/", ".cpp", &file_list, &files_amount);
-    ASSERT_EQ(err, 0);
-    std::string answer [] = {
-            "../testing/dir_reading/file.cpp",
-            "../testing/dir_reading/trash/trash_but_still_cpp.cpp",
-            "../testing/dir_reading/inner_cpp/inner.cpp",
-            "../testing/dir_reading/inner_cpp/inner_x2_cpp/inner_x2.cpp"
-    };
-
-    for (size_t i = 0; i < files_amount; ++i)
-        EXPECT_EQ (strcmp(file_list[i], answer[i].c_str()), 0);
-
-    for (size_t i = 0; i < files_amount; i++)
-        free(file_list[i]);
-    free(file_list);
-}
-
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
