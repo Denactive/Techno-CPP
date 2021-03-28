@@ -35,7 +35,8 @@ install:
 script:
 
     #accuracy:
-    - cppcheck --error-exitcode=1 --suppress=missingIncludeSystem --enable=performance,portability ../single-process/
+    - cppcheck --error-exitcode=1 --suppress=missingIncludeSystem --enable=performance,portability single-process/
+    - cppcheck --error-exitcode=1 --suppress=missingIncludeSystem --enable=performance,portability multi-thread/
 
     # скрипт сборки и тестирования проекта:
     - mkdir build
