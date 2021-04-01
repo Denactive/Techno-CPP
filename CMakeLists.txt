@@ -47,3 +47,11 @@ target_link_libraries(tests-mt word_finder-mt ${GTEST_LIBRARIES} -lpthread)
 add_test(test-mt ./tests-mt)
 add_definitions(-fprofile-arcs -ftest-coverage)
 target_link_libraries(tests-mt -fprofile-arcs)
+
+
+add_executable(tests-speed testing/tests_speed.cpp)
+target_link_libraries(tests-speed word_finder-mt ${GTEST_LIBRARIES} -lpthread)
+
+add_test(test_speed ./tests-speed)
+add_definitions(-fprofile-arcs -ftest-coverage)
+target_link_libraries(tests-speed -fprofile-arcs)

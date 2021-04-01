@@ -230,7 +230,10 @@ string_size_pair* word_search_mt(const char* pattern, char** file_list, size_t f
     for (size_t i = 0; i < num_tr; ++i) {
         if (MT_DEBUG)
             printf("\tthread creation [%zu]\n", i);
-        data[i] = (thread_searcher_data){i, pattern, &(thread_file_list[i].res), thread_file_list[i].size};
+        data[i].tr_no = i;
+        data[i].files_amount = thread_file_list[i].size;
+        data[i].word_search_result = &(thread_file_list[i].res);
+        data[i].pattern = pattern;
         if (pthread_create(&(ptid[i]), NULL, thread_searcher, &(data[i]))) {
             if (MT_DEBUG)
                 printf("\tthread creation failed\n");

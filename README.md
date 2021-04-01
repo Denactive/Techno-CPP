@@ -1,6 +1,40 @@
 # [Techno] CPP
 Домашки Турчина Дениса
 
+Тест скорости проводил на 26 файлах 1 мБ
+
+Speed test | Multi-thread
+	4 Threads:
+	execution time: 1.867002
+	5 Threads:
+	execution time: 1.544632
+	6 Threads:
+	execution time: 1.308196
+	7 Threads:
+	execution time: 1.142795
+	8 Threads:
+	execution time: 0.974311
+	9 Threads:
+	execution time: 0.844081
+	10 Threads:
+	execution time: 0.793779
+	11 Threads:
+	execution time: 0.706832
+	12 Threads:
+	execution time: 0.665971
+	13 Threads:
+	execution time: 0.614233
+	14 Threads:
+	execution time: 0.568251
+	15 Threads:
+	execution time: 0.532881
+	16 Threads:
+	execution time: 0.483077
+	
+Speed test | Single-Thread
+	execution time: 0.181277
+
+
 ИЗ2 посвящено приобретению навыков системной разработки на C и работе с внешними библиотеками. В качестве результата ИЗ2 ожидается:
 * грамотное разбиение проекта на файлы;
 * наличие двух реализаций – последовательной и параллельной, оформленных в виде статической и динамической библиотеки соответственно, а также тестирующей программы, которая будет сравнивать на разных входных данных результаты обеих реализаций между собой;

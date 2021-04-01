@@ -9,8 +9,7 @@
 
 extern "C" {
 #include "word_finder_MT.h"
-#include "word_finder_MT.c"
-#include "word_finder.c"
+#include "word_finder.h"
 }
 
 void print_res(const string_size_pair* word_search_result, size_t files_amount) {
@@ -222,6 +221,37 @@ TEST(ErrorTest, NoArgsMT) {
 
     EXPECT_STREQ(buf, answer_str.c_str());
     free(buf);
+}
+
+TEST(CriticalTest, StressTest) {
+    std::cout << "Critical test | Stress-test" << std::endl;
+
+    char** file_list = NULL;
+    size_t files_amount = 0;
+    int err_dir = get_files_from_dir("../testing/manyfiles/", ".c", &file_list, &files_amount);
+    ASSERT_EQ(err_dir, 0);
+    ASSERT_EQ(files_amount, 500);
+
+    string_size_pair* res = create_word_search_result(file_list, files_amount);
+    ASSERT_NE(res, nullptr);
+    word_search("test", &res, files_amount);
+    int merge_res = merge_sort_desc(res, files_amount);
+    ASSERT_EQ(merge_res, 0);
+
+    string_size_pair* res_mt = NULL;
+    res_mt = word_search_mt("test", file_list, files_amount, 4);
+    ASSERT_NE(res_mt, nullptr);
+
+    for (size_t i = 0; i < files_amount; ++i) {
+        EXPECT_EQ(res[i].matches_amount, res_mt[i].matches_amount);
+        EXPECT_STREQ(res[i].name, res[i].name);;
+    }
+
+    free(res);
+    free(res_mt);
+    for (size_t i = 0; i < files_amount; i++)
+        free(file_list[i]);
+    free(file_list);
 }
 
 int main(int argc, char **argv) {
