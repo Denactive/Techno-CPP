@@ -7,7 +7,8 @@
 size_t gain_file_size(const char* filename);
 string_size_pair* sort_files_by_size_desc(char** file_list, size_t files_amount, size_t num_tr);
 char*** create_thread_file_lists(string_size_pair* file_list_with_sizes, size_t* res_sizes, size_t files_amount, size_t num_tr);
-
+size_t* round_robin (size_t num_elements, size_t num_arrays);
+string_size_pair* merge_arrays(string_sizex2* thread_file_list, size_t num_tr, size_t files_amount);
 
 // This function allocates memory!
 // create_word_search_result_mt separates the file list for threads so each has
@@ -21,28 +22,19 @@ string_sizex2* create_word_search_result_mt(size_t num_tr, char** file_list, siz
     if (!sorted_by_size)
         return NULL;
     // разделим равномерно по потокам в порядке убывания размера файлов (Round Robin по потокам)
-    // todo: v otdelnuu
-    size_t* res_sizes = (size_t*)calloc(num_tr, sizeof(size_t));
+    size_t* res_sizes = round_robin(files_amount, num_tr);
     if (!res_sizes) {
         free(sorted_by_size);
         return NULL;
     }
-    for (size_t i = 0; i < num_tr; ++i)
-        res_sizes[i] = files_amount / num_tr;
-    // остаток файлов тоже распределяем "равномерно"
-    size_t mod = files_amount % num_tr;
-    while (mod) {
-        res_sizes[files_amount % num_tr - mod]++;
-        mod--;
-    }
-
+    // создадим списки файлов, которые будут переданы каждому потоку, так чтобы адреса
+    // имен проверяемых файлов лежали в памяти подряд. Это нужно для задействования кеширования при сортировке
     char*** file_list_for_thread = create_thread_file_lists(sorted_by_size, res_sizes, files_amount, num_tr);
     if (!file_list_for_thread) {
         free(sorted_by_size);
         free(res_sizes);
         return NULL;
     }
-
     // создание итоговой структуры с пустыми значениями числа вхождений (matches_amount)
     string_sizex2* res = (string_sizex2 *)calloc(num_tr, sizeof(string_sizex2));
     if (!res) {
@@ -59,7 +51,6 @@ string_sizex2* create_word_search_result_mt(size_t num_tr, char** file_list, siz
         res[i].res = create_word_search_result(file_list_for_thread[i], res_sizes[i]);
         res[i].size = res_sizes[i];
     }
-
     // cleaning up
     for (size_t j = 0; j < num_tr; ++j)
         free(file_list_for_thread[j]);
@@ -83,6 +74,23 @@ void clear_word_search_result_mt(string_sizex2** word_search_result, size_t num_
     }
     free(*word_search_result);
     *word_search_result = NULL;
+}
+
+// allocates memory!
+size_t* round_robin (size_t num_elements, size_t num_arrays) {
+    size_t* res_sizes = (size_t*)calloc(num_arrays, sizeof(size_t));
+    if (!res_sizes) {
+        return NULL;
+    }
+    for (size_t i = 0; i < num_arrays; ++i)
+        res_sizes[i] = num_elements / num_arrays;
+    // остаток файлов тоже распределяем "равномерно"
+    size_t mod = num_elements % num_arrays;
+    while (mod) {
+        res_sizes[num_elements % num_arrays - mod]++;
+        mod--;
+    }
+    return res_sizes;
 }
 
 string_size_pair * sort_files_by_size_desc(char** file_list, size_t files_amount, size_t num_tr) {
@@ -203,21 +211,10 @@ void* thread_searcher(void* args) {
 string_size_pair* word_search_mt(const char* pattern, char** file_list, size_t files_amount, size_t num_tr) {
     if (!pattern || !files_amount || !num_tr)
         return NULL;
-
     // создаем промежуточную структуру, которая назначит каждому треду свой список файлов для обработки
     string_sizex2* thread_file_list = create_word_search_result_mt(num_tr, file_list, files_amount);
     if (!thread_file_list)
         return NULL;
-
-    if (MT_DEBUG) {
-        for (size_t i = 0; i < num_tr; ++i) {
-            printf("Thread %zu gets %zu files:\n", i, thread_file_list[i].size);
-            for (size_t j = 0; j < thread_file_list[i].size; ++j) {
-                printf("\t%s | %zu\n", thread_file_list[i].res[j].name, thread_file_list[i].res[j].matches_amount);
-            }
-        }
-    }
-
     // раздаем потокам задачи - выделенный в предыдущей структуре список файлов
     pthread_t* ptid = (pthread_t*)calloc(num_tr, sizeof(pthread_t));
     if (!ptid) {
@@ -233,10 +230,7 @@ string_size_pair* word_search_mt(const char* pattern, char** file_list, size_t f
     for (size_t i = 0; i < num_tr; ++i) {
         if (MT_DEBUG)
             printf("\tthread creation [%zu]\n", i);
-        data[i].tr_no = i;
-        data[i].files_amount = thread_file_list[i].size;
-        data[i].word_search_result = &(thread_file_list[i].res);
-        data[i].pattern = pattern;
+        data[i] = (thread_searcher_data){i, pattern, &(thread_file_list[i].res), thread_file_list[i].size};
         if (pthread_create(&(ptid[i]), NULL, thread_searcher, &(data[i]))) {
             if (MT_DEBUG)
                 printf("\tthread creation failed\n");
@@ -249,7 +243,6 @@ string_size_pair* word_search_mt(const char* pattern, char** file_list, size_t f
             return NULL;
         }
     }
-
     // ожидание потоков, сбор ошибок
     int join_status = 0;
     int exit_status = 0; //calloc(1, sizeof(int));
@@ -267,42 +260,40 @@ string_size_pair* word_search_mt(const char* pattern, char** file_list, size_t f
         return NULL;
     }
 
-    if (MT_DEBUG) {
-        printf("\nafter sort\n");
-        for (size_t i = 0; i < num_tr; ++i) {
-            printf("Thread %zu gets %zu files:\n", i, thread_file_list[i].size);
-            for (size_t j = 0; j < thread_file_list[i].size; ++j) {
-                printf("\t%s | %zu\n", thread_file_list[i].res[j].name, thread_file_list[i].res[j].matches_amount);
-            }
-        }
-    }
-
     // merge sorted results
-    string_size_pair* sorted_res = (string_size_pair*)calloc(files_amount, sizeof(string_size_pair));
+    string_size_pair* sorted_res = merge_arrays(thread_file_list, num_tr, files_amount);
     if (!sorted_res) {
         clear_word_search_result_mt(&thread_file_list, num_tr, -1);
         return NULL;
     }
+    clear_word_search_result_mt(&thread_file_list, num_tr, 0);
+    return sorted_res;
+}
+
+string_size_pair* merge_arrays(string_sizex2* thread_file_list, size_t num_tr, size_t files_amount) {
+    string_size_pair* sorted_res = (string_size_pair *)calloc(files_amount, sizeof(string_size_pair));
+    if (!sorted_res)
+        return NULL;
     // счетчики-итераторы для каждого из потоков
-    size_t* pos = (size_t*)calloc(num_tr, sizeof(size_t));
+    size_t *pos = (size_t *) calloc(num_tr, sizeof(size_t));
     if (!pos) {
-        clear_word_search_result_mt(&thread_file_list, num_tr, -1);
         free(sorted_res);
         return NULL;
     }
     size_t pos_sum = 0;  // сумма итераторов во всех массивых = итератору в итоговом массиве sorted_res
     size_t index_max = 0;  // храним не сам максимум, а его индекс
     while (pos_sum != files_amount) {
-        // за начальное значение берем наименший по номеру тред, так, чтобы чтение по индексу i
-        // было валидно, т.е. pos[index_max] < числа файлов в списке треда с номером index_max
+    // за начальное значение берем наименший по номеру тред, так, чтобы чтение по индексу i
+    // было валидно, т.е. pos[index_max] < числа файлов в списке треда с номером index_max
         index_max = 0;
         while (thread_file_list[index_max].size == pos[index_max])
             index_max++;
         for (size_t i = 1; i < num_tr; ++i) {
-            // если элементы в массиве данного треда закончиись - пропустить
+    // если элементы в массиве данного треда закончиись - пропустить
             if (thread_file_list[i].size == pos[i])
                 continue;
-            if (thread_file_list[i].res[pos[i]].matches_amount > thread_file_list[index_max].res[pos[index_max]].matches_amount)
+            if (thread_file_list[i].res[pos[i]].matches_amount >
+                thread_file_list[index_max].res[pos[index_max]].matches_amount)
                 index_max = i;
         }
         sorted_res[pos_sum].name = thread_file_list[index_max].res[pos[index_max]].name;
@@ -310,8 +301,6 @@ string_size_pair* word_search_mt(const char* pattern, char** file_list, size_t f
         pos[index_max]++;
         pos_sum++;
     }
-    // слили результаты успешно
-    clear_word_search_result_mt(&thread_file_list, num_tr, 0);
     free(pos);
     return sorted_res;
 }
