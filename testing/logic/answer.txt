@@ -1,0 +1,8 @@
+../testing/logic/cases/6.c: 197
+../testing/logic/cases/7.c: 10
+../testing/logic/cases/4.c: 6
+../testing/logic/cases/8.c: 5
+../testing/logic/cases/5.c: 4
+../testing/logic/cases/2.c: 2
+../testing/logic/cases/3.c: 1
+../testing/logic/cases/1.c: 0
