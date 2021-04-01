@@ -10,13 +10,13 @@ void clear_mem(char*** filelist, string_size_pair** res, size_t num);
 int main(int argc, const char** argv) {
     if (argc < 3) {
         printf("Please pass a source path and a word to search\n");
-        return -1;
+        return 1;
     }
 
     char** file_list = NULL;
     size_t files_amount = 0;
     if (get_files_from_dir(argv[1], ".c", &file_list, &files_amount))
-        return -1;
+        return 1;
 
     string_size_pair *word_search_result = create_word_search_result(file_list, files_amount);
     if (!word_search_result && !files_amount) {
@@ -27,13 +27,13 @@ int main(int argc, const char** argv) {
     if (!word_search_result) {
         printf("Error | failed to create string_size_pair structure for current file list");
         clear_mem(&file_list, &word_search_result, files_amount);
-        return -1;
+        return 1;
     }
 
     if (word_search(argv[2], &word_search_result, files_amount)) {
         printf("Error | word reading failed\n");
         clear_mem(&file_list, &word_search_result, files_amount);
-        return -1;
+        return 1;
     }
 
     if (DEBUG)
@@ -55,6 +55,8 @@ int main(int argc, const char** argv) {
 }
 
 void clear_mem(char*** file_list, string_size_pair** res, size_t num) {
+    if (!file_list || !res)
+        return;
     for (size_t i = 0; i < num; ++i) {
         if (DEBUG)
             printf("\twonna clear [%zu] %s\n", i, (*file_list)[i]);
