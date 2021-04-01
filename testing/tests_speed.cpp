@@ -16,7 +16,6 @@ void print_res(const string_size_pair* word_search_result, size_t files_amount) 
     }
 }
 
-
 TEST(SpeedTEST, MultiTread) {
     std::cout << "Speed test | Multi-thread" << std::endl;
 

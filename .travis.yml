@@ -63,6 +63,7 @@ script:
 
     #safety:
     - valgrind --error-exitcode=1 --tool=memcheck --leak-check=full ./program ../testing/logic/ test
+    - valgrind --error-exitcode=1 --tool=memcheck --leak-check=full ./program-mt ../testing/logic/ test
 
 after_success:
     # public:

@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 project(iz-2)
 set(CMAKE_C_STANDARD 11)
 
-set(CMAKE_C_FLAGS "-g -coverage -O0 -Wall -Werror -Wpedantic -fprofile-arcs -ftest-coverage -fPIC")
-set(CMAKE_CXX_FLAGS "-g -coverage -O0 -Wall -Werror -Wpedantic -fprofile-arcs -ftest-coverage -fPIC")
+set(CMAKE_C_FLAGS "-g -coverage -O0 -Wall -Werror -fprofile-arcs -ftest-coverage -fPIC")
+set(CMAKE_CXX_FLAGS "-g -coverage -O0 -Wall -Werror -fprofile-arcs -ftest-coverage -fPIC")
 set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
 
 
@@ -23,7 +23,7 @@ include_directories(${MULTITHREAD_PROJ_DIR})
 add_library(word_finder-mt SHARED ${MULTITHREAD_PROJ_DIR}/word_finder_MT.c)
 target_link_libraries(word_finder-mt word_finder_shared)
 add_executable(program-mt ${MULTITHREAD_PROJ_DIR}/program-MT.c)
-target_link_libraries(program-mt word_finder-mt ${PTHREAD_LIBRARY} -lpthread)
+target_link_libraries(program-mt word_finder-mt ${PTHREAD_LIBRARY} -lpthread ${CMAKE_DL_LIBS} -ldl)
 
 
 enable_testing()
